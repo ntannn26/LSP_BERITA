@@ -1,18 +1,20 @@
 <?php
-session_start();
-include 'config/koneksi.php';
+session_start(); // mulai session biar bisa simpan login user
+include 'config/koneksi.php'; // panggil file koneksi database
 
-/* AMBIL KATEGORI */
-$kategori = mysqli_query($conn, "SELECT * FROM kategori");
-$kategori_nav = mysqli_query($conn, "SELECT * FROM kategori");
+/* AMBIL DATA KATEGORI */
+$kategori = mysqli_query($conn, "SELECT * FROM kategori"); // untuk ditampilkan di halaman utama
+$kategori_nav = mysqli_query($conn, "SELECT * FROM kategori"); // untuk dropdown navbar
 
-/* SEARCH */
+/* AMBIL INPUT PENCARIAN */
 $cari = isset($_GET['cari']) ? mysqli_real_escape_string($conn, $_GET['cari']) : '';
 
-/* HEADLINE */
+/* SIAPKAN VARIABEL HEADLINE */
 $headline = null;
 
+/* CEK ADA SEARCH ATAU TIDAK */
 if ($cari != '') {
+    // kalau user cari sesuatu
     $headlineQuery = mysqli_query($conn, "
         SELECT * FROM berita
         WHERE judul LIKE '%$cari%'
@@ -20,6 +22,7 @@ if ($cari != '') {
         LIMIT 1
     ");
 } else {
+    // kalau tidak cari apa-apa, tampilkan berita terbaru
     $headlineQuery = mysqli_query($conn, "
         SELECT * FROM berita
         ORDER BY id DESC
@@ -27,12 +30,13 @@ if ($cari != '') {
     ");
 }
 
+/* AMBIL DATA HEADLINE */
 if ($headlineQuery && mysqli_num_rows($headlineQuery) > 0) {
     $headline = mysqli_fetch_assoc($headlineQuery);
 }
 
-/* GAMBAR */
-$gambarHeadline = "gambar/default.jpg";
+/* CEK GAMBAR HEADLINE */
+$gambarHeadline = "gambar/default.jpg"; // gambar default
 if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar'])) {
     $gambarHeadline = "gambar/" . $headline['gambar'];
 }
@@ -44,23 +48,27 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
     <title>NewsApp</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <!-- LOAD BOOTSTRAP -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
+        /* BACKGROUND HALAMAN */
         body { background-color: #f1f3f6; }
         html { scroll-behavior: smooth; }
 
+        /* NAVBAR */
         .navbar {
-            position: sticky;
+            position: sticky; /* biar nempel di atas */
             top: 0;
             z-index: 99999;
             background: linear-gradient(135deg, #0f172a, #293446);
         }
 
+        /* FIX DROPDOWN BIAR GA KEHALANG */
         .dropdown-menu { z-index: 999999 !important; }
         .offcanvas { z-index: 999999 !important; }
 
-        /* HERO */
+        /* BAGIAN HEADLINE */
         .hero-headline {
             position: relative;
             min-height: 90vh;
@@ -70,6 +78,7 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
             align-items: center;
         }
 
+        /* OVERLAY GELAP */
         .overlay {
             position: absolute;
             inset: 0;
@@ -88,10 +97,10 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
         }
 
         h4 {
-            scroll-margin-top: 100px;
+            scroll-margin-top: 100px; /* biar ga ketutup navbar */
         }
 
-        /* CARD */
+        /* CARD BERITA */
         .card-news {
             border: none;
             border-radius: 10px;
@@ -99,9 +108,10 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
         }
 
         .card-news:hover {
-            transform: scale(1.03);
+            transform: scale(1.03); /* efek hover */
         }
 
+        /* TEXT KATEGORI */
         .kategori {
             font-size: 12px;
             color: red;
@@ -112,6 +122,7 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
             object-fit: cover;
         }
 
+        /* FOOTER */
         .footer-custom {
             background: #f4f4f4;
             border-top: 5px solid #111827;
@@ -119,19 +130,9 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
             margin-top: 50px;
         }
 
-        .brand {
-            font-weight: bold;
-        }
-
-        .slogan {
-            color: red;
-            font-size: 13px;
-        }
-
-        .desc {
-            font-size: 13px;
-            color: #555;
-        }
+        .brand { font-weight: bold; }
+        .slogan { color: red; font-size: 13px; }
+        .desc { font-size: 13px; color: #555; }
 
         .footer-list {
             list-style: none;
@@ -144,10 +145,9 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
             cursor: pointer;
         }
 
-        .footer-list li:hover {
-            color: red;
-        }
+        .footer-list li:hover { color: red; }
 
+        /* ICON SOSIAL */
         .social-icons span {
             display: inline-block;
             width: 32px;
@@ -179,10 +179,9 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
             margin-right: 10px;
         }
 
-        .footer-bottom a:hover {
-            color: red;
-        }
+        .footer-bottom a:hover { color: red; }
 
+        /* MENU LIST */
         .list-group-item {
             border: none;
             border-radius: 8px;
@@ -199,15 +198,16 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
 
 <body>
 
-<!-- NAVBAR -->
+<!-- NAVBAR ATAS -->
 <nav class="navbar navbar-dark bg-dark shadow">
     <div class="container-fluid px-3">
 
+        <!-- LOGO -->
         <a class="navbar-brand" href="index.php"> NewsApp</a>
 
         <div class="d-flex align-items-center">
 
-            <!-- DROPDOWN -->
+            <!-- DROPDOWN KATEGORI -->
             <div class="dropdown me-2">
                 <button class="btn btn-outline-light dropdown-toggle"
                         data-bs-toggle="dropdown">
@@ -217,6 +217,7 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
                 <ul class="dropdown-menu">
                     <li><a class="dropdown-item" href="index.php">Semua</a></li>
 
+                    <!-- LOOPING KATEGORI -->
                     <?php while($nav = mysqli_fetch_assoc($kategori_nav)){ ?>
                         <li>
                             <a class="dropdown-item"
@@ -237,7 +238,7 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
                 <button class="btn btn-danger">Cari</button>
             </form>
 
-            <!-- USER -->
+            <!-- CEK LOGIN -->
             <?php if(isset($_SESSION['login'])){ ?>
                 <span class="text-white me-3">
                      <?= htmlspecialchars($_SESSION['username']); ?>
@@ -247,7 +248,7 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
                 <a href="auth/register.php" class="btn btn-warning me-2">Daftar</a>
             <?php } ?>
 
-            <!-- MENU -->
+            <!-- BUTTON MENU -->
             <button class="btn btn-light"
                     data-bs-toggle="offcanvas"
                     data-bs-target="#menuSamping">
@@ -258,7 +259,7 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
     </div>
 </nav>
 
-<!-- OFFCANVAS -->
+<!-- OFFCANVAS (MENU SAMPING) -->
 <div class="offcanvas offcanvas-end" id="menuSamping">
     <div class="offcanvas-header border-bottom">
         <h5 class="fw-bold">Menu</h5>
@@ -267,11 +268,11 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
 
     <div class="offcanvas-body d-flex flex-column justify-content-between">
 
-        <!-- ATAS (PROFILE + MENU) -->
+        <!-- BAGIAN ATAS -->
         <div>
 
             <?php if(isset($_SESSION['login'])){ ?>
-                <!-- PROFILE -->
+                <!-- PROFILE USER -->
                 <div class="text-center mb-4">
                     <img src="https://i.pravatar.cc/100"
                          class="rounded-circle mb-2"
@@ -283,7 +284,7 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
                     </small>
                 </div>
 
-                <!-- MENU LIST -->
+                <!-- LIST MENU -->
                 <div class="list-group">
 
                 <a href="index.php" class="list-group-item list-group-item-action">
@@ -296,7 +297,6 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
                     <a href="admin/dashboard.php" class="list-group-item list-group-item-action">
                          Dashboard
                     </a>
-
                     <hr class="my-1">
                 <?php } ?>
 
@@ -306,7 +306,7 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
 
                 <hr class="my-1">
 
-                <!-- KATEGORI -->
+                <!-- KATEGORI MENU -->
                 <div class="list-group-item ">
                      <strong>Kategori</strong>
                 </div>
@@ -334,7 +334,7 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
 
         </div>
 
-        <!-- BAWAH (LOGOUT) -->
+        <!-- LOGOUT -->
         <?php if(isset($_SESSION['login'])){ ?>
         <div>
             <a href="auth/logout.php" class="btn btn-danger w-100">
@@ -354,14 +354,18 @@ if (!empty($headline['gambar']) && file_exists("gambar/" . $headline['gambar']))
 
     <div class="container content">
 
+        <!-- LABEL -->
         <span class="badge bg-danger mb-3">
             <?= $cari ? '🔍 HASIL PENCARIAN' : '🔥 BERITA TERBARU'; ?>
         </span>
 
+        <!-- JUDUL -->
         <h1><?= substr(strip_tags($headline['judul']), 0 , 40); ?></h1>
 
+        <!-- ISI SINGKAT -->
         <p><?= substr(strip_tags($headline['isi']),0,120); ?>...</p>
 
+        <!-- LINK DETAIL -->
         <a href="detail.php?id=<?= $headline['id']; ?>"
            class="btn btn-danger btn-lg">
             Baca Selengkapnya →
@@ -438,6 +442,7 @@ $beritaKat = mysqli_query($conn, "
 
 </div>
 
+<!-- footer -->
 <footer class="footer-custom">
 
     <div class="container py-4">

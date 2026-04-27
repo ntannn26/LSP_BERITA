@@ -1,33 +1,34 @@
 <?php
-session_start();
-include 'config/koneksi.php';
+session_start(); // mulai session untuk cek login user
+include 'config/koneksi.php'; // koneksi ke database
 
-// VALIDASI ID
-$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+// VALIDASI ID DARI URL
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0; // ambil id dan ubah ke integer
 
 if ($id <= 0) {
-    echo "ID tidak valid!";
-    exit;
+    echo "ID tidak valid!"; // kalau id kosong / salah
+    exit; // hentikan program
 }
 
-// QUERY DETAIL
+// QUERY DETAIL BERITA (PAKAI PREPARED STATEMENT BIAR AMAN)
 $stmt = mysqli_prepare($conn, "
     SELECT berita.*, kategori.nama_kategori 
     FROM berita 
     LEFT JOIN kategori ON berita.kategori_id = kategori.id
     WHERE berita.id = ?
 ");
-mysqli_stmt_bind_param($stmt, "i", $id);
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
-$data = mysqli_fetch_assoc($result);
+mysqli_stmt_bind_param($stmt, "i", $id); // bind id ke query
+mysqli_stmt_execute($stmt); // jalankan query
+$result = mysqli_stmt_get_result($stmt); // ambil hasil
+$data = mysqli_fetch_assoc($result); // ambil data jadi array
 
+// CEK DATA ADA ATAU TIDAK
 if (!$data) {
     echo "Berita tidak ditemukan!";
     exit;
 }
 
-// BERITA TERKAIT
+// AMBIL BERITA TERKAIT (BERDASARKAN KATEGORI SAMA)
 $kategori_id = $data['kategori_id'];
 $related = mysqli_query($conn, "
     SELECT * FROM berita 
@@ -42,29 +43,35 @@ $related = mysqli_query($conn, "
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+
+    <!-- JUDUL HALAMAN -->
     <title><?= htmlspecialchars($data['judul']); ?></title>
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <!-- BOOTSTRAP -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
+        /* BACKGROUND */
         body {
             background-color: #f1f3f6;
         }
 
         /* NAVBAR */
         .navbar {
-            position: sticky;
+            position: sticky; /* biar nempel di atas */
             top: 0;
             z-index: 999;
             background: linear-gradient(135deg, #0f172a, #293446);
         }
 
-        /* CONTENT */
+        /* BATAS LEBAR KONTEN */
         .container-fluid {
             max-width: 1400px;
         }
 
+        /* KONTEN UTAMA */
         .content {
             background: white;
             padding: 30px;
@@ -72,6 +79,7 @@ $related = mysqli_query($conn, "
             min-height: 80vh;
         }
 
+        /* GAMBAR BERITA */
         .news-img {
             width: 100%;
             height: 400px;
@@ -79,17 +87,20 @@ $related = mysqli_query($conn, "
             border-radius: 10px;
         }
 
+        /* TEXT KATEGORI */
         .kategori {
             font-size: 13px;
             font-weight: bold;
             color: red;
         }
 
+        /* JUDUL */
         .judul {
             font-weight: bold;
             line-height: 1.3;
         }
 
+        /* ISI BERITA */
         .isi {
             text-align: justify;
             line-height: 1.8;
@@ -101,6 +112,7 @@ $related = mysqli_query($conn, "
             top: 80px;
         }
 
+        /* CARD BERITA TERKAIT */
         .card {
             border: none;
             border-radius: 10px;
@@ -120,19 +132,9 @@ $related = mysqli_query($conn, "
             margin-top: 50px;
         }
 
-        .brand {
-            font-weight: bold;
-        }
-
-        .slogan {
-            color: red;
-            font-size: 13px;
-        }
-
-        .desc {
-            font-size: 13px;
-            color: #555;
-        }
+        .brand { font-weight: bold; }
+        .slogan { color: red; font-size: 13px; }
+        .desc { font-size: 13px; color: #555; }
 
         .footer-list {
             list-style: none;
@@ -149,6 +151,7 @@ $related = mysqli_query($conn, "
             color: red;
         }
 
+        /* ICON SOSIAL */
         .social-icons span {
             display: inline-block;
             width: 32px;
@@ -184,6 +187,7 @@ $related = mysqli_query($conn, "
             color: red;
         }
 
+        /* MENU LIST */
         .list-group-item {
             border: none;
             border-radius: 8px;
@@ -203,26 +207,33 @@ $related = mysqli_query($conn, "
 <!-- NAVBAR -->
 <nav class="navbar navbar-dark shadow">
     <div class="container-fluid px-3">
+
+        <!-- LOGO -->
         <a class="navbar-brand" href="index.php">NewsApp</a>
 
         <div class="d-flex align-items-center">
+
+            <!-- CEK LOGIN -->
             <?php if (isset($_SESSION['login'])) { ?>
                 <span class="text-white me-3">
                     <?= htmlspecialchars($_SESSION['username']); ?>
                 </span>
             <?php } else { ?>
+                <!-- JIKA BELUM LOGIN -->
                 <a href="auth/login.php" class="btn btn-outline-light me-2">Login</a>
                 <a href="auth/register.php" class="btn btn-warning me-2">Daftar</a>
             <?php } ?>
 
+            <!-- BUTTON MENU -->
             <button class="btn btn-light" data-bs-toggle="offcanvas" data-bs-target="#menuSamping">
                 ☰
             </button>
+
         </div>
     </div>
 </nav>
 
-<!-- OFFCANVAS -->
+<!-- OFFCANVAS MENU -->
 <div class="offcanvas offcanvas-end" id="menuSamping">
     <div class="offcanvas-header border-bottom">
         <h5 class="fw-bold">Menu</h5>
@@ -231,19 +242,21 @@ $related = mysqli_query($conn, "
 
     <div class="offcanvas-body d-flex flex-column justify-content-between">
 
+        <!-- BAGIAN ATAS -->
         <div>
             <?php if (isset($_SESSION['login'])) { ?>
 
-                <!-- PROFILE -->
+                <!-- PROFILE USER -->
                 <div class="text-center mb-4">
                     <img src="https://i.pravatar.cc/100" class="rounded-circle mb-2" width="80">
                     <h6 class="mb-0"><?= $_SESSION['username']; ?></h6>
                     <small class="text-muted"><?= $_SESSION['role'] ?? 'user'; ?></small>
                 </div>
 
-                <!-- MENU -->
+                <!-- MENU LIST -->
                 <div class="list-group">
                     <a href="index.php" class="list-group-item list-group-item-action">Home</a>
+
                     <hr class="my-1">
 
                     <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin') { ?>
@@ -252,8 +265,10 @@ $related = mysqli_query($conn, "
                     <?php } ?>
 
                     <a href="#" class="list-group-item list-group-item-action">Berita</a>
+
                     <hr class="my-1">
 
+                    <!-- KATEGORI -->
                     <div class="list-group-item"><strong>Kategori</strong></div>
 
                     <?php
@@ -268,6 +283,7 @@ $related = mysqli_query($conn, "
 
             <?php } else { ?>
 
+                <!-- BELUM LOGIN -->
                 <div class="text-center">
                     <p>Silakan login dulu</p>
                     <a href="auth/login.php" class="btn btn-dark w-100 mb-2">Login</a>
@@ -277,6 +293,7 @@ $related = mysqli_query($conn, "
             <?php } ?>
         </div>
 
+        <!-- LOGOUT -->
         <?php if (isset($_SESSION['login'])) { ?>
             <div>
                 <a href="auth/logout.php" class="btn btn-danger w-100">Logout</a>
@@ -286,32 +303,37 @@ $related = mysqli_query($conn, "
     </div>
 </div>
 
-<!-- CONTENT -->
+<!-- KONTEN UTAMA -->
 <div class="container-fluid px-4 mt-4">
     <div class="row g-4">
 
-        <!-- KONTEN UTAMA -->
+        <!-- BAGIAN KIRI (ISI BERITA) -->
         <div class="col-lg-9 col-md-8">
             <div class="content shadow">
 
+                <!-- KATEGORI -->
                 <span class="kategori">
                     <?= htmlspecialchars($data['nama_kategori'] ?? 'Umum'); ?>
                 </span>
 
+                <!-- JUDUL -->
                 <h1 class="judul mt-2">
                     <?= htmlspecialchars($data['judul']); ?>
                 </h1>
 
                 <hr>
 
+                <!-- GAMBAR (JIKA ADA) -->
                 <?php if (!empty($data['gambar']) && file_exists("gambar/" . $data['gambar'])) { ?>
                     <img src="gambar/<?= htmlspecialchars($data['gambar']); ?>" class="news-img mb-3">
                 <?php } ?>
 
+                <!-- ISI BERITA -->
                 <div class="isi mt-3">
                     <?= nl2br(htmlspecialchars($data['isi'])); ?>
                 </div>
 
+                <!-- TOMBOL KEMBALI -->
                 <a href="index.php" class="btn btn-secondary mt-4">
                     ← Kembali
                 </a>
@@ -319,9 +341,11 @@ $related = mysqli_query($conn, "
             </div>
         </div>
 
-        <!-- SIDEBAR -->
+        <!-- SIDEBAR KANAN -->
         <div class="col-lg-3 col-md-4 sidebar">
             <h5 class="fw-bold mb-3">Berita Terkait</h5>
+
+            <!-- LOOP BERITA TERKAIT -->
             <?php while ($r = mysqli_fetch_assoc($related)) { ?>
                 <div class="card mb-3 shadow-sm">
                     <div class="card-body">
@@ -346,6 +370,7 @@ $related = mysqli_query($conn, "
     <div class="container py-4">
         <div class="row">
 
+            <!-- BRAND -->
             <div class="col-md-6 mb-3">
                 <h3 class="brand">NewsApp</h3>
                 <p class="slogan">Stay Update, Stay Ahead</p>
@@ -357,6 +382,7 @@ $related = mysqli_query($conn, "
                 </p>
             </div>
 
+            <!-- COMPANY -->
             <div class="col-md-2 mb-3">
                 <h6>Company</h6>
                 <ul class="footer-list">
@@ -368,6 +394,7 @@ $related = mysqli_query($conn, "
                 </ul>
             </div>
 
+            <!-- CONTACT -->
             <div class="col-md-4 mb-3">
                 <h6>Contact us</h6>
 
@@ -389,6 +416,7 @@ $related = mysqli_query($conn, "
         </div>
     </div>
 
+    <!-- FOOTER BAWAH -->
     <div class="footer-bottom">
         <div class="container d-flex justify-content-between flex-wrap">
             <div>
@@ -405,6 +433,7 @@ $related = mysqli_query($conn, "
 
 </footer>
 
+<!-- SCRIPT BOOTSTRAP -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>

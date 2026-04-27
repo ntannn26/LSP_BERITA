@@ -1,12 +1,13 @@
 <?php
-session_start();
+session_start(); // mulai session
 
+// cek apakah user sudah login dan role nya admin
 if (!isset($_SESSION['login']) || $_SESSION['role'] != 'admin') {
-    header("Location: ../index.php");
+    header("Location: ../index.php"); // kalau bukan admin, tendang ke halaman utama
     exit;
 }
 
-include '../config/koneksi.php';
+include '../config/koneksi.php'; // koneksi ke database
 ?>
 
 <!DOCTYPE html>
@@ -16,11 +17,12 @@ include '../config/koneksi.php';
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Admin Dashboard</title>
 
+<!-- pakai bootstrap -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
 body {
-    background: #f5f7fb;
+    background: #f5f7fb; /* warna background */
     font-family: 'Segoe UI', sans-serif;
 }
 
@@ -28,7 +30,7 @@ body {
 .sidebar {
     width: 230px;
     height: 100vh;
-    position: fixed;
+    position: fixed; /* biar tetap di samping */
     background: white;
     padding: 20px;
     border-right: 1px solid #eee;
@@ -43,6 +45,7 @@ body {
     border-radius: 8px;
 }
 
+/* efek hover menu */
 .sidebar a:hover,
 .sidebar a.active {
     background: #0d6efd;
@@ -51,7 +54,7 @@ body {
 
 /* MAIN */
 .main {
-    margin-left: 250px;
+    margin-left: 250px; /* kasih jarak dari sidebar */
     padding: 20px;
 }
 
@@ -73,7 +76,7 @@ body {
 
 /* TABLE */
 .table thead {
-    background: #0d6efd;
+    background: #0d6efd; /* warna header tabel */
     color: white;
 }
 
@@ -85,7 +88,7 @@ body {
 .img-thumb {
     width: 80px;
     height: 55px;
-    object-fit: cover;
+    object-fit: cover; /* biar gambar rapi */
     border-radius: 8px;
 }
 
@@ -106,11 +109,16 @@ body {
 <!-- SIDEBAR -->
 <div class="sidebar">
     <h5>⚙ Admin</h5>
+
+    <!-- menu navigasi -->
     <a href="dashboard.php">Dashboard</a>
     <a href="berita.php" class="active">Berita</a>
     <a href="kategori.php">Kategori</a>
     <a href="histori.php">Histori</a>
+
     <hr>
+
+    <!-- tombol logout -->
     <a href="../auth/logout.php" class="text-danger">Logout</a>
 </div>
 
@@ -119,7 +127,11 @@ body {
 
     <!-- TOPBAR -->
     <div class="topbar d-flex justify-content-between align-items-center">
+
+        <!-- input pencarian -->
         <input type="text" id="searchNews" class="form-control w-50" placeholder="Cari berita...">
+
+        <!-- tampilkan username -->
         <strong><?= htmlspecialchars($_SESSION['username']); ?></strong>
     </div>
 
@@ -135,6 +147,7 @@ body {
             </div>
 
             <div>
+                <!-- tombol tambah berita -->
                 <a href="tambah_berita.php" class="btn btn-primary btn-sm">
                      Tambah Berita
                 </a>
@@ -160,8 +173,9 @@ body {
                 <tbody id="tableNews">
 
                 <?php
-                $no = 1;
+                $no = 1; // nomor urut
 
+                // ambil data berita + kategori
                 $query = mysqli_query($conn, "
                     SELECT berita.*, kategori.nama_kategori 
                     FROM berita 
@@ -169,33 +183,41 @@ body {
                     ORDER BY berita.id DESC
                 ");
 
+                // cek apakah ada data
                 if (mysqli_num_rows($query) > 0) {
                     while ($row = mysqli_fetch_assoc($query)) {
                 ?>
 
                 <tr>
+                    <!-- nomor -->
                     <td><?= $no++ ?></td>
 
+                    <!-- gambar -->
                     <td>
                         <img src="../gambar/<?= htmlspecialchars($row['gambar']) ?>" class="img-thumb">
                     </td>
 
+                    <!-- judul -->
                     <td class="text-start fw-semibold">
                         <?= htmlspecialchars($row['judul']) ?>
                     </td>
 
+                    <!-- kategori -->
                     <td>
                         <span class="badge bg-success">
                             <?= htmlspecialchars($row['nama_kategori']) ?>
                         </span>
                     </td>
 
+                    <!-- tombol aksi -->
                     <td>
+                        <!-- edit -->
                         <a href="edit_berita.php?id=<?= (int)$row['id'] ?>"
                            class="btn btn-warning btn-sm me-1">
                              Edit
                         </a>
 
+                        <!-- hapus -->
                         <a href="hapus_berita.php?id=<?= (int)$row['id'] ?>"
                            class="btn btn-danger btn-sm"
                            onclick="return confirm('Yakin ingin hapus berita ini?')">
@@ -207,6 +229,7 @@ body {
                 <?php
                     }
                 } else {
+                    // kalau belum ada data
                     echo "
                     <tr>
                         <td colspan='5' class='text-muted py-4'>
@@ -225,17 +248,21 @@ body {
     </div>
 
 </div>
+
 <script>
+// fitur search (ajax sederhana)
 document.getElementById("searchNews").addEventListener("keyup", function () {
 
-    let keyword = this.value;
+    let keyword = this.value; // ambil input user
 
+    // kirim ke file cari_berita.php
     fetch("cari_berita.php?cari=" + encodeURIComponent(keyword))
         .then(res => res.text())
         .then(data => {
+            // tampilkan hasil ke tabel
             document.getElementById("tableNews").innerHTML = data;
         })
-        .catch(err => console.log(err));
+        .catch(err => console.log(err)); // kalau error tampil di console
 
 });
 </script>
